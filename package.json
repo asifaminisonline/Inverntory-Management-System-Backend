@@ -1,0 +1,37 @@
+{
+  "name": "inverntory-management-system-backend",
+  "version": "1.0.0",
+  "description": "Backend for Inventory Management System",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index",
+    "dev": "nodemon index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asifaminisonline/inventory-management-backend.git"
+  },
+  "keywords": [
+    "Management",
+    "System"
+  ],
+  "author": "Asif Amin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/asifaminisonline/inventory-management-backend/issues"
+  },
+  "homepage": "https://github.com/asifaminisonline/inventory-management-backend#readme",
+  "dependencies": {
+    "axios": "^1.5.1",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.6.3",
+    "nodemon": "^3.0.1"
+  }
+}
