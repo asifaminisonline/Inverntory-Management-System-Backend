@@ -314,6 +314,76 @@ app.get("/user-category", async (req, res) => {
   }
 });
 
+// In your backend API route
+// Import necessary modules and schemas here
+
+// Define an "Order" schema
+const orderSchema = new mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId, // Assuming you're storing product ID
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  address: {
+    type: String,
+    required: true,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  image: {
+    type: String, // Assuming you're storing product image URL
+    required: true,
+  },
+});
+
+const Order = mongoose.model("Order", orderSchema);
+
+// In your backend API route
+app.post("/orders", async (req, res) => {
+  try {
+    const { productId, name, address, quantity, price, image } = req.body;
+
+    // Create a new order using the "Order" schema
+    const order = new Order({
+      productId,
+      name,
+      address,
+      quantity,
+      price,
+      image,
+    });
+
+    // Save the order to the database
+    await order.save();
+
+    console.log("Order placed:", order);
+
+    res.status(201).json({ message: "Order placed successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error placing order" });
+  }
+});
+
+app.get("/orders", async (req, res) => {
+  try {
+    const orders = await Order.find();
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching orders" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
