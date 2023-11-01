@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cors from "cors";
+import nodemailer from "nodemailer";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -320,7 +321,7 @@ app.get("/user-category", async (req, res) => {
 // Define an "Order" schema
 const orderSchema = new mongoose.Schema({
   productId: {
-    type: mongoose.Schema.Types.ObjectId, // Assuming you're storing product ID
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   name: {
@@ -340,19 +341,69 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   image: {
-    type: String, // Assuming you're storing product image URL
+    type: String,
     required: true,
   },
 });
 
 const Order = mongoose.model("Order", orderSchema);
 
-// In your backend API route
+// app.post("/orders", async (req, res) => {
+//   try {
+//     const { productId, name, address, quantity, price, image } = req.body;
+
+//     const order = new Order({
+//       productId,
+//       name,
+//       address,
+//       quantity,
+//       price,
+//       image,
+//     });
+
+//     await order.save();
+
+//     // Email configuration
+//     const transporter = nodemailer.createTransport({
+//       service: "Gmail", // Use the email service you have (e.g., Gmail, Outlook, etc.)
+//       auth: {
+//         user: "asifaminisonline@gmail.com", // Your email address
+//         pass: "sifs pfta sqgm qeiu", // Your email password
+//       },
+//     });
+
+//     // Email content
+//     const mailOptions = {
+//       from: "asifaminisonline@gmail.com",
+//       to: "asifamin8135290@gmail.com", // Change this to the customer's email address
+//       subject: "Order Confirmation",
+//       text: `Thank you for placing an order!\nOrder Details: ${name} at ${address}\nQuantity: ${quantity}\nTotal Price: ₹${price}`,
+//     };
+
+//     // Send the email
+//     transporter.sendMail(mailOptions, (error, info) => {
+//       if (error) {
+//         console.log("Email error:", error);
+//         res
+//           .status(500)
+//           .json({ message: "Order placed, but email could not be sent." });
+//       } else {
+//         console.log("Email sent:", info.response);
+//         res
+//           .status(201)
+//           .json({ message: "Order placed and email sent successfully." });
+//       }
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Error placing order" });
+//   }
+// });
+
 app.post("/orders", async (req, res) => {
   try {
     const { productId, name, address, quantity, price, image } = req.body;
 
-    // Create a new order using the "Order" schema
     const order = new Order({
       productId,
       name,
@@ -362,15 +413,61 @@ app.post("/orders", async (req, res) => {
       image,
     });
 
-    // Save the order to the database
     await order.save();
 
-    console.log("Order placed:", order);
+    // Fetch the product details based on the productId
+    const product = await Product.findById(productId);
 
-    res.status(201).json({ message: "Order placed successfully" });
+    if (!product) {
+      return res.status(400).json({ message: "Product not found" });
+    }
+
+    // Email configuration
+    const transporter = nodemailer.createTransport({
+      service: "Gmail", // Use the email service you have (e.g., Gmail, Outlook, etc.)
+      auth: {
+        user: "asifaminisonline@gmail.com", // Your email address
+        pass: "sifs pfta sqgm qeiu", // Your email password
+      },
+    });
+
+    // Email content with styled format and greetings
+    const mailOptions = {
+      from: "asifaminisonline@gmail.com",
+      to: "suhailamin107@gmail.com", // Change this to the customer's email address
+      subject: "Order Confirmation",
+      html: `
+        <div style="background-color: #f4f4f4; padding: 20px;">
+          <h1 style="color: #333;">Order Confirmation</h1>
+          <p style="color: #666;">Dear ${name},</p>
+          <p style="color: #666;">Thank you for placing an order with us! Here are the details:</p>
+          <p><strong>Product Name:</strong> ${product.name}</p>
+          <img style="width: 100%; height: auto;"src="${product.image}" alt="Product Image" style="max-width: 200px; max-height: 200px;">
+          <p><strong>Address:</strong> ${address}</p>
+          <p><strong>Quantity:</strong> ${quantity}</p>
+          <p><strong>Total Price:</strong> ₹${price}</p>
+          <p style="color: #666;">Thank you for your order! If you have any questions, feel free to contact us.</p>
+        </div>
+      `,
+    };
+
+    // Send the email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log("Email error:", error);
+        res
+          .status(500)
+          .json({ message: "Order placed, but email could not be sent." });
+      } else {
+        console.log("Email sent:", info.response);
+        res
+          .status(201)
+          .json({ message: "Order placed and email sent successfully." });
+      }
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error placing order" });
+    res.status(500).json({ message: "Error placing an order" });
   }
 });
 
