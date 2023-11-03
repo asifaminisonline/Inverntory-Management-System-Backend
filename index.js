@@ -348,58 +348,6 @@ const orderSchema = new mongoose.Schema({
 
 const Order = mongoose.model("Order", orderSchema);
 
-// app.post("/orders", async (req, res) => {
-//   try {
-//     const { productId, name, address, quantity, price, image } = req.body;
-
-//     const order = new Order({
-//       productId,
-//       name,
-//       address,
-//       quantity,
-//       price,
-//       image,
-//     });
-
-//     await order.save();
-
-//     // Email configuration
-//     const transporter = nodemailer.createTransport({
-//       service: "Gmail", // Use the email service you have (e.g., Gmail, Outlook, etc.)
-//       auth: {
-//         user: "asifaminisonline@gmail.com", // Your email address
-//         pass: "sifs pfta sqgm qeiu", // Your email password
-//       },
-//     });
-
-//     // Email content
-//     const mailOptions = {
-//       from: "asifaminisonline@gmail.com",
-//       to: "asifamin8135290@gmail.com", // Change this to the customer's email address
-//       subject: "Order Confirmation",
-//       text: `Thank you for placing an order!\nOrder Details: ${name} at ${address}\nQuantity: ${quantity}\nTotal Price: ₹${price}`,
-//     };
-
-//     // Send the email
-//     transporter.sendMail(mailOptions, (error, info) => {
-//       if (error) {
-//         console.log("Email error:", error);
-//         res
-//           .status(500)
-//           .json({ message: "Order placed, but email could not be sent." });
-//       } else {
-//         console.log("Email sent:", info.response);
-//         res
-//           .status(201)
-//           .json({ message: "Order placed and email sent successfully." });
-//       }
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Error placing order" });
-//   }
-// });
-
 app.post("/orders", async (req, res) => {
   try {
     const { productId, name, address, quantity, price, image } = req.body;
@@ -434,7 +382,7 @@ app.post("/orders", async (req, res) => {
     // Email content with styled format and greetings
     const mailOptions = {
       from: "asifaminisonline@gmail.com",
-      to: "suhailamin107@gmail.com", // Change this to the customer's email address
+      to: "asifaminisonline@gmail.com", // Change this to the customer's email address
       subject: "Order Confirmation",
       html: `
         <div style="background-color: #f4f4f4; padding: 20px;">
@@ -478,6 +426,96 @@ app.get("/orders", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error fetching orders" });
+  }
+});
+
+//++++++++++++++++++++++++++++++++User Registration++++++++++++++++++++++++++++++//
+
+const userRegistrationSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+const UserRegistration = mongoose.model(
+  "UserRegistration",
+  userRegistrationSchema
+);
+
+// User Registration Route
+app.post("/user-registration", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  try {
+    // Check if the user already exists with the given email
+    const existingUser = await UserRegistration.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create a new user
+    const user = new UserRegistration({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    // Save the user to the database
+    await user.save();
+
+    // Return a success message
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Registration failed" });
+  }
+});
+// User Login Route
+app.post("/user-login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Find the user by email
+    const user = await UserRegistration.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // Verify the password
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (passwordMatch) {
+      // Passwords match, user is authenticated
+      // Here, you can generate and send a JWT token
+      const token = jwt.sign(
+        { userId: user._id, email: user.email },
+        "your-secret-key",
+        { expiresIn: "1h" }
+      );
+      res.status(200).json({ message: "Login successful", token });
+    } else {
+      // Passwords do not match
+      res.status(401).json({ message: "Invalid email or password" });
+    }
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({ message: "Error logging in" });
   }
 });
 
